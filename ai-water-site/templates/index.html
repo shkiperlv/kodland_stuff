@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>AI Water Consumption</title>
+
+<style>
+body {
+    background: url('https://cdn.pixabay.com/video/2021/01/30/63559-506616455_tiny.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color: white;
+    font-family: Arial;
+    text-align: center;
+    position: relative;
+    margin: 0;
+    padding: 0;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 0;
+}
+
+body > * {
+    position: relative;
+    z-index: 1;
+}
+
+.big {
+    font-size: 2em;
+    color: #00d4ff;
+}
+
+.bar {
+    width: 80%;
+    height: 25px;
+    background: #222;
+    margin: 10px auto;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.fill {
+    height: 100%;
+    background: linear-gradient(90deg, cyan, blue);
+    width: 0%;
+    transition: width 0.5s ease;
+}
+
+.percent {
+    font-size: 0.9em;
+    color: #aaa;
+}
+
+.intro {
+    text-align: left;
+    font-size: 18px;
+    max-width: 900px;
+    margin: 0 auto;
+    margin-bottom: 20px;
+}
+</style>
+
+</head>
+<body>
+
+<h1>Потребление ресурсов искусственным интеллектом</h1>
+
+<p class="intro">
+Развитие ИИ приносит не только пользу, но и создаёт экологические проблемы. Центры обработки данных быстро растут и требуют огромных ресурсов. Для охлаждения серверов используется большое количество воды, производство оборудования требует редких минералов, а потребление энергии увеличивает выбросы CO₂.
+</p>
+
+<p class="intro">
+Дата‑центры, которые обеспечивают работу ИИ, требуют всё больше энергии. Быстрый рост генеративных моделей приводит к увеличению спроса на электричество и воду для охлаждения серверов. Чем больше энергии используется, тем выше выбросы CO₂, особенно если электричество производится из невозобновляемых источников. Анализ также показывает, что даже отдельные запросы к ИИ имеют небольшой углеродный след, но при массовом использовании он быстро накапливается, а общий объём выбросов растёт вместе с масштабированием технологий. Кроме того, инфраструктура ИИ потребляет значительные объёмы пресной воды, что усиливает давление на экосистемы и может усугублять дефицит ресурсов в уязвимых регионах. Всё это делает развитие ИИ важным фактором экологического воздействия и подчёркивает необходимость перехода к более устойчивым источникам энергии и более эффективным технологиям охлаждения.
+</p>
+
+
+    
+<div>
+    Вода:
+    <div class="big" id="water">0</div>
+
+    CO₂:
+    <div class="big" id="co2">0</div>
+
+    Электричество:
+    <div class="big" id="energy">0</div>
+</div>
+
+<h2>Эквиваленты</h2>
+
+<p id="buckets">0</p>
+<p id="bottles">0</p>
+<p id="bathtubs">0</p>
+<p id="trucks">0</p>
+<p id="pools">0</p>
+
+<h2>Сравнение с объёмом воды</h2>
+
+Байкал
+<div class="bar"><div id="baikal" class="fill"></div></div>
+<div class="percent" id="baikal_text"></div>
+
+Атлантический океан
+<div class="bar"><div id="atlantic" class="fill"></div></div>
+<div class="percent" id="atlantic_text"></div>
+
+Тихий океан
+<div class="bar"><div id="pacific" class="fill"></div></div>
+<div class="percent" id="pacific_text"></div>
+
+<script>
+
+function scalePercent(x) {
+
+    if (x <= 0) return 0;
+
+    return Math.min(Math.log10(x * 1e7 + 1) * 100, 100);
+}
+
+async function update() {
+
+    try {
+
+        const res = await fetch("/api/stats");
+        const data = await res.json();
+
+
+        // ресурсы
+        document.getElementById("water").innerText =
+            data.water.toFixed(2) + " liters";
+
+        document.getElementById("co2").innerText =
+            data.co2.toFixed(2) + " kg";
+
+        document.getElementById("energy").innerText =
+            data.energy.toFixed(2) + " GJ";
+
+
+        // эквиваленты
+        document.getElementById("buckets").innerText =
+            data.buckets.toFixed(2) + " ведер";
+
+        document.getElementById("bottles").innerText =
+            data.bottles.toFixed(2) + " бутылок";
+
+        document.getElementById("bathtubs").innerText =
+            data.bathtubs.toFixed(3) + " ванн";
+
+        document.getElementById("trucks").innerText =
+            data.trucks.toFixed(5) + " цистерн";
+
+        document.getElementById("pools").innerText =
+            data.pools.toExponential(3) + " бассейнов";
+
+
+        // реальные проценты
+        const baikalReal = data.baikal_percent;
+        const atlanticReal = data.atlantic_percent;
+        const pacificReal = data.pacific_percent;
+
+
+        // полоски
+        document.getElementById("baikal").style.width =
+            scalePercent(baikalReal) + "%";
+
+        document.getElementById("atlantic").style.width =
+            scalePercent(atlanticReal) + "%";
+
+        document.getElementById("pacific").style.width =
+            scalePercent(pacificReal) + "%";
+
+
+        // текст процентов
+        document.getElementById("baikal_text").innerText =
+            baikalReal.toExponential(6) + "%";
+
+        document.getElementById("atlantic_text").innerText =
+            atlanticReal.toExponential(6) + "%";
+
+        document.getElementById("pacific_text").innerText =
+            pacificReal.toExponential(6) + "%";
+
+    }
+    catch (err) {
+
+        console.error("Ошибка:", err);
+
+    }
+}
+
+update();
+
+setInterval(update, 500);
+
+</script>
+
+</body>
+</html>
